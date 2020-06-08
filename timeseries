@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn import linear_model 
-# Below is the code where I define a function for us to use. You do not need
-# to understand this yet.
+
+# creating the plot that will be created later
 def seas_cycle(ind,n,indata):
     y=indata.values[:]
     reg = linear_model.LinearRegression() 
@@ -16,52 +16,71 @@ def seas_cycle(ind,n,indata):
     reg.fit(X, y[idx]) 
     sim = reg.predict(np.column_stack((np.cos(ind),np.sin(ind)))) 
     return sim
+    
 # defining the variable and the cvs file 
 fin="csv file"
+
 # reading the csv file
 data=pd.read_csv(fin,parse_dates=True,index_col=0)
+
 # looking at the specific columns in the csv
 print(data.columns)
+
 # This first command is needed to make the plots 'appear' in this notebook
 %matplotlib inline 
 data["AirTC_Avg"].plot()
+
 # daily air temp
 daily_t=data["AirTC_Avg"].resample("D") 
+
 # asking the csv file for the daily mean max and min for each date
 daymean_t=daily_t.mean()
 daymax_t=daily_t.max()
 daymin_t=daily_t.min()
+
 # then plotting the mean, max, min on a line plot per each day
 daymean_t.plot()
 daymax_t.plot()
 daymin_t.plot()
+
 # print out the following record min and max for the given time period from the csv file
 print("Record high temperature was: ",daymax_t.max(),"deg C")
 print("Record low temperature was: ",daymin_t.min(),"deg C")
+
 # adds the day and year
 doy=daymax_t.index.dayofyear
+
 # finds the mean for the min data
 doy_clim=daymax_t.groupby(doy).min()
+
 # attaches the mean value to the correct date
 doy_max=[doy_clim[doy_clim.index==i].values[0] for i in doy.values[:]] 
+
 # creates the reference
-angles=np.radians(np.arange(0,361)) 
+angles=np.radians(np.arange(0,361))
+
 # use the sin function
 y=np.sin(angles) 
+
 # this is another way to plot something when it isn't a DataFrame
 plt.plot(y) 
+
 # creates a new plot with for the max of the year
 clim=seas_cycle(doy.astype(np.float),365.25,daymax_t) 
 # creates the data frame
 out=pd.DataFrame(data={"obs":daymax_t.values[:],"doy_max":doy_max,"clim":clim},\
                  index=daymax_t.index) 
+                 
  # # blank figure/axes to plot on
 fig,ax=plt.subplots(1,1) 
+
 # is used to specifiy ax to plot on
 out.plot(ax=ax) 
+
 # label y-axis and x axis 
 ax.set_ylabel("Air temperature (deg C)") 
 ax.set_xlabel("Date") 
+
 # creates a new variable and csv file to add the new graph and data too
 fout="newfile.csv" 
 out.to_csv(fout)
